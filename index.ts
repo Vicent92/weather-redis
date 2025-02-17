@@ -1,5 +1,6 @@
 import { serve } from 'bun'
 import { createClient } from 'redis'
+import { WeathrApi } from './GetWeatherApi';
 
 const client = await createClient()
   .on('error', err => console.log('Redis Client Error', err))
@@ -11,17 +12,10 @@ serve({
         const queryParam = path.searchParams
 
         if (path.pathname === '/clima') {
-            const cache = await client.get('clima')
-            if (cache) {
-                return new Response(cache, {status: 200})
-            }
-
             const city = queryParam.get('city')
-            const res = await fetch(`${process.env.API_WEATHER}/${city}?key=${process.env.KEY_API_WEATHER}`)
-            const json = await res.json()
+            const data = await WeathrApi.getWeater(`${process.env.API_WEATHER}/${city}?key=${process.env.KEY_API_WEATHER}`)
 
-            await client.set('clima', JSON.stringify(json))
-            return new Response(JSON.stringify(json), {status: 200})
+            return new Response(JSON.stringify(data), {status: 200})
         }
         // console.log(path.pathname)
         return new Response(`QLQ`)        
