@@ -1,20 +1,28 @@
-import { RedisImplement } from './RedisImplement'
+import { RedisImplement, type CacheStrategy } from "./RedisImplement";
 
 export class WeathrApi {
+  private cacehStrategy: CacheStrategy;
 
-    static async getWeater(url: string) {
+  constructor(cacheStrategy: CacheStrategy) {
+    this.cacehStrategy = cacheStrategy;
+  }
 
-        const client = await RedisImplement.inicialClient()
-        const cache = await RedisImplement.getCache(client, 'clima')
+  setCacheStrategy(cacheStrategy: CacheStrategy) {
+    this.cacehStrategy = cacheStrategy;
+  }
 
-        if (cache) {
-            return cache
-        }
+  async getWeater(url: string) {
+    const client = await this.cacehStrategy.inicialClient();
+    const cache = await this.cacehStrategy.getCache(client, "clima");
 
-        const res = await fetch(url)
-        const json = await res.json()
-        
-        await RedisImplement.setCache(client, 'clima', JSON.stringify(json))
-        return json
+    if (cache) {
+      return cache;
     }
+
+    const res = await fetch(url);
+    const json = await res.json();
+
+    await this.cacehStrategy.setCache(client, "clima", JSON.stringify(json));
+    return json;
+  }
 }
